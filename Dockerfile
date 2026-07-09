@@ -1,8 +1,8 @@
 ﻿FROM node:20-alpine AS gateway-builder
 WORKDIR /app/gateway
-COPY gateway/package*.json ./
+COPY apps/gateway/package*.json ./
 RUN npm ci
-COPY gateway/ ./
+COPY apps/gateway/ ./
 RUN npm run build
 
 
@@ -50,6 +50,6 @@ FROM node:20-alpine
 WORKDIR /app/gateway
 COPY --from=gateway-builder /app/gateway/dist ./dist
 COPY --from=gateway-builder /app/gateway/node_modules ./node_modules
-COPY frontend ./public
+COPY apps/frontend ./public
 EXPOSE 3000
 CMD ["node", "dist/server.js"]
