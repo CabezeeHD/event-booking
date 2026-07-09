@@ -1,0 +1,13 @@
+﻿apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: event-booking
+spec:
+  selector:
+    app: notificationservice
+  ports:
+    - name: http
+      port: 3005
+      targetPort: 3005
+  type: ClusterIP

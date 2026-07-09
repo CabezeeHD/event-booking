@@ -1,0 +1,11 @@
+﻿apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-config
+  namespace: event-booking
+data:
+  PORT: "3004"
+  GRPC_PORT: "50051"
+  MONGODB_HOSTNAME: "mongodb"
+  MONGODB_DBNAME: "paymentdb"
+  RABBITMQ_URL: "amqp://rabbitmq:5672"

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package bookingservice;
+
+service BookingService {
+    rpc GetBooking(BookingRequest) returns (BookingResponse);
+    rpc ListBookings(Empty) returns (BookingList);
+}
+
+message Empty {}
+
+message BookingRequest {
+    string id = 1;
+}
+
+message Booking {
+    string id = 1;
+    string userId = 2;
+    string eventId = 3;
+    string status = 4;
+}
+
+message BookingResponse {
+    Booking booking = 1;
+}
+
+message BookingList {
+    repeated Booking bookings = 1;
+}

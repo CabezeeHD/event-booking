@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Booking</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section id="login-screen" class="login-screen">
+    <div class="login-hero">
+      <p class="eyebrow">Event Booking</p>
+      <h1>Book events, manage tickets, and pay in one place.</h1>
+      <p class="hero-copy">Log in with your name and email to continue to the event booking area.</p>
+    </div>
+
+    <form id="login-form" class="login-card">
+      <h2>Sign in</h2>
+      <p class="muted">Sign in with a user that exists in the UserService database.</p>
+
+      <label for="login-username">Email or name</label>
+      <input id="login-username" autocomplete="username" placeholder="admin" required>
+
+      <label for="login-password">Password</label>
+      <input id="login-password" type="password" autocomplete="current-password" value="password" required>
+
+      <button class="btn primary full" type="submit">Continue</button>
+    </form>
+  </section>
+
+  <section id="app-screen" class="app-screen hidden">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Event Booking</p>
+        <h1 id="page-title">Events</h1>
+      </div>
+
+      <div class="user-area">
+        <span id="current-user"></span>
+        <button id="btn-logout" class="btn ghost" type="button">Log out</button>
+      </div>
+    </header>
+
+    <div class="app-layout">
+      <nav class="sidebar" aria-label="Main navigation">
+        <button class="nav-btn active" type="button" data-page="events-page">Events</button>
+        <button class="nav-btn" type="button" data-page="bookings-page">Bookings</button>
+        <button class="nav-btn" type="button" data-page="users-page">Users</button>
+        <button class="nav-btn" type="button" data-page="payments-page">Payments</button>
+        <button class="nav-btn" type="button" data-page="notifications-page">Notifications</button>
+      </nav>
+
+      <main>
+        <section id="events-page" class="page active">
+          <div class="page-header">
+            <div>
+              <h2>Available events</h2>
+              <p class="muted">Browse events, create new events, and book a seat.</p>
+            </div>
+            <button id="btn-load-events" class="btn secondary" type="button">Load Events</button>
+          </div>
+
+          <div class="content-grid">
+            <div id="events-list" class="card-grid"></div>
+
+            <form class="panel" id="event-form">
+              <h3>Create Event</h3>
+
+              <label for="event-title">Title</label>
+              <input id="event-title" placeholder="Tech Conference" required>
+
+              <label for="event-location">Location</label>
+              <input id="event-location" placeholder="Aarhus" required>
+
+              <label for="event-capacity">Capacity</label>
+              <input id="event-capacity" type="number" min="1" placeholder="100" required>
+
+              <label for="event-price">Price (DKK)</label>
+              <input id="event-price" type="number" min="0" step="0.01" placeholder="0" required>
+
+              <button id="btn-create-event" class="btn primary full" type="submit">Create Event</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="bookings-page" class="page">
+          <div class="page-header">
+            <div>
+              <h2>Your bookings</h2>
+              <p class="muted">Create a booking manually or book directly from an event card.</p>
+            </div>
+            <button id="btn-load-bookings" class="btn secondary" type="button">Load Bookings</button>
+          </div>
+
+          <div class="content-grid">
+            <div id="bookings-list" class="list"></div>
+
+            <form class="panel" id="booking-form">
+              <h3>Create Booking</h3>
+
+              <label for="booking-userId">User name</label>
+              <input id="booking-userId" placeholder="User name or email" readonly required>
+
+              <label for="booking-event-name">Event</label>
+              <input id="booking-event-name" placeholder="Choose an event from the Events page" readonly required>
+              <input id="booking-eventId" type="hidden" required>
+
+              <label for="booking-quantity">Quantity</label>
+              <input id="booking-quantity" type="number" min="1" value="1" required>
+
+              <button id="btn-create-booking" class="btn primary full" type="submit">Create Booking</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="users-page" class="page">
+          <div class="page-header">
+            <div>
+              <h2>Users</h2>
+              <p class="muted">List existing users and create a new one.</p>
+            </div>
+            <button id="btn-load-users" class="btn secondary" type="button">Load Users</button>
+          </div>
+
+          <div class="content-grid">
+            <div id="users-list" class="list"></div>
+
+            <form class="panel" id="user-form">
+              <h3>Create User</h3>
+
+              <label for="user-name">Name</label>
+              <input id="user-name" placeholder="Anna Hansen" required>
+
+              <label for="user-email">Email</label>
+              <input id="user-email" type="email" placeholder="anna@example.com" required>
+
+              <button id="btn-create-user" class="btn primary full" type="submit">Create User</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="payments-page" class="page">
+          <div class="page-header">
+            <div>
+              <h2>Payments</h2>
+              <p class="muted">Create payments and see payment history.</p>
+            </div>
+            <button id="btn-load-payments" class="btn secondary" type="button">Load Payments</button>
+          </div>
+
+          <div class="content-grid">
+            <div id="payments-list" class="list"></div>
+
+            <form class="panel" id="payment-form">
+              <h3>Create Payment</h3>
+
+              <label for="payment-payer">Payer</label>
+              <input id="payment-payer" placeholder="Payer name or email" readonly required>
+              <input id="payment-bookingId" type="hidden">
+
+              <label for="payment-payee">Payee</label>
+              <input id="payment-payee" placeholder="Event Booking ApS" readonly required>
+
+              <label for="payment-amount">Amount</label>
+              <input id="payment-amount" type="number" min="1" step="0.01" placeholder="0" readonly required>
+
+              <label for="payment-currency">Currency</label>
+              <input id="payment-currency" placeholder="DKK">
+
+              <button id="btn-create-payment" class="btn primary full" type="submit">Create Payment</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="notifications-page" class="page">
+          <div class="page-header">
+            <div>
+              <h2>Notifications</h2>
+              <p class="muted">Messages from the booking and payment flow.</p>
+            </div>
+            <button id="btn-load-notifications" class="btn secondary" type="button">Load Notifications</button>
+          </div>
+
+          <div id="notifications-list" class="list"></div>
+        </section>
+      </main>
+    </div>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: app-route
+  namespace: event-booking
+spec:
+  parentRefs:
+    - name: envoy-gateway
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - "swwao-courses.orbit.au.dk"
+    - "mycluster.my"
+  rules:
+  - matches:
+    - path:
+        type: Exact
+        value: /grp-1/tester
+    filters:
+      - type: RequestRedirect
+        requestRedirect:
+          path:
+            type: ReplaceFullPath
+            replaceFullPath: /grp-1/tester/
+          statusCode: 301
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /grp-1/tester
+    filters:
+      - type: URLRewrite
+        urlRewrite:
+          path:
+            type: ReplacePrefixMatch
+            replacePrefixMatch: /
+    backendRefs:
+      - name: gateway
+        port: 80

@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package eventservice;
+
+service EventService {
+  rpc GetEvent(EventRequest) returns (EventResponse);
+  rpc ListEvents(Empty) returns (EventList);
+  rpc ReserveCapacity(CapacityRequest) returns (CapacityResponse);
+  rpc ReleaseCapacity(CapacityRequest) returns (CapacityResponse);
+}
+
+message Empty {}
+
+message EventRequest {
+  int32 id = 1;
+}
+
+message CapacityRequest{
+  string eventId = 1;
+  int32 seats = 2;
+}
+
+message Event {
+  int32 id = 1;
+  string title = 2;
+  string location = 3;
+  int32 capacity = 4;
+}
+
+message EventResponse {
+  Event event = 1;
+}
+
+message EventList {
+  repeated Event events = 1;
+}
+
+message CapacityResponse {
+  bool success = 1;
+  int32 remaining_capacity = 2;
+  string message = 3;
+}

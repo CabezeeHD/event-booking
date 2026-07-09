@@ -1,0 +1,13 @@
+﻿apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: event-booking
+spec:
+  selector:
+    app: paymentservice
+  ports:
+    - name: http
+      port: 3004
+      targetPort: 3004
+  type: ClusterIP

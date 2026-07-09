@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package userservice;
+
+service UserService {
+  rpc GetUser(UserRequest) returns (UserResponse);
+  rpc ListUsers(Empty) returns (UserList);
+}
+
+message Empty {}
+
+message UserRequest {
+  string id = 1;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string status = 4;
+}
+
+message UserResponse {
+  User user = 1;
+}
+
+message UserList {
+  repeated User users = 1;
+}

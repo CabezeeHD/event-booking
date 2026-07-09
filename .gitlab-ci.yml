@@ -1,0 +1,67 @@
+variables:
+  GIT_DEPTH: 1
+  BOT_NAME: "GitLab Runner Bot"
+  BOT_EMAIL: "202205693@post.au.dk"
+  ARCHS: "amd64 arm64"
+  REGISTRY: registry.gitlab.au.dk/swwao/f2026/exam-projects/group-1/event-booking
+
+stages:
+  - build
+  - build-n-push
+  - deploy
+
+build:
+  stage: build
+  before_script:
+    - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+    - docker run --privileged --rm tonistiigi/binfmt --install all
+    - docker buildx create --use
+  script:
+    - docker buildx build --platform linux/arm64/v8,linux/amd64 -f services/UserService/Dockerfile services/UserService
+    - docker buildx build --platform linux/arm64/v8,linux/amd64 -f services/EventService/Dockerfile services/EventService
+    - docker buildx build --platform linux/arm64/v8,linux/amd64 -f services/BookingService/Dockerfile services/BookingService
+    - docker buildx build --platform linux/arm64/v8,linux/amd64 -f services/PaymentService/Dockerfile services/PaymentService
+    - docker buildx build --platform linux/arm64/v8,linux/amd64 -f services/NotificationService/Dockerfile services/NotificationService
+    - docker buildx build --platform linux/arm64/v8,linux/amd64 -f gateway/Dockerfile .
+  rules:
+    - if: $CI_COMMIT_TAG == null
+
+build-n-push:
+  stage: build-n-push
+  before_script:
+    - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+    - docker run --privileged --rm tonistiigi/binfmt --install all
+    - docker buildx create --use
+  script:
+    - docker buildx build --push --provenance=false --platform linux/arm64/v8,linux/amd64 --tag "$REGISTRY/user-service:$CI_COMMIT_TAG" --tag "$REGISTRY/user-service:latest" -f services/UserService/Dockerfile services/UserService
+    - docker buildx build --push --provenance=false --platform linux/arm64/v8,linux/amd64 --tag "$REGISTRY/event-service:$CI_COMMIT_TAG" --tag "$REGISTRY/event-service:latest" -f services/EventService/Dockerfile services/EventService
+    - docker buildx build --push --provenance=false --platform linux/arm64/v8,linux/amd64 --tag "$REGISTRY/booking-service:$CI_COMMIT_TAG" --tag "$REGISTRY/booking-service:latest" -f services/BookingService/Dockerfile services/BookingService
+    - docker buildx build --push --provenance=false --platform linux/arm64/v8,linux/amd64 --tag "$REGISTRY/payment-service:$CI_COMMIT_TAG" --tag "$REGISTRY/payment-service:latest" -f services/PaymentService/Dockerfile services/PaymentService
+    - docker buildx build --push --provenance=false --platform linux/arm64/v8,linux/amd64 --tag "$REGISTRY/notification-service:$CI_COMMIT_TAG" --tag "$REGISTRY/notification-service:latest" -f services/NotificationService/Dockerfile services/NotificationService
+    - docker buildx build --push --provenance=false --platform linux/arm64/v8,linux/amd64 --tag "$REGISTRY/gateway:$CI_COMMIT_TAG" --tag "$REGISTRY/gateway:latest" -f gateway/Dockerfile .
+  rules:
+    - if: $CI_COMMIT_TAG
+
+deploy-job:
+  dependencies:
+    - build-n-push
+  stage: deploy
+  image: alpine
+  script:
+    - apk add git
+    - wget https://github.com/mikefarah/yq/releases/download/v4.33.2/yq_linux_amd64.tar.gz -O - | tar xz && mv yq_linux_amd64 /usr/bin/yq
+    - git config --global user.name "${BOT_NAME}"
+    - git config --global user.email "${BOT_EMAIL}"
+    - git clone https://$K8S_SETUP_USERNAME:$K8S_SETUP_PASSWORD@gitlab.au.dk/swwao/f2026/exam-projects/group-1/event-booking-gitops.git
+    - cd event-booking-gitops
+    - yq -i eval "select(.kind==\"Deployment\").spec.template.spec.containers[0].image = \"$REGISTRY/user-service:$CI_COMMIT_TAG\"" User-deployment.yaml
+    - yq -i eval "select(.kind==\"Deployment\").spec.template.spec.containers[0].image = \"$REGISTRY/event-service:$CI_COMMIT_TAG\"" Eventservice-deployment.yaml
+    - yq -i eval "select(.kind==\"Deployment\").spec.template.spec.containers[0].image = \"$REGISTRY/booking-service:$CI_COMMIT_TAG\"" Booking-deployment.yaml
+    - yq -i eval "select(.kind==\"Deployment\").spec.template.spec.containers[0].image = \"$REGISTRY/payment-service:$CI_COMMIT_TAG\"" Payment-deployment.yaml
+    - yq -i eval "select(.kind==\"Deployment\").spec.template.spec.containers[0].image = \"$REGISTRY/notification-service:$CI_COMMIT_TAG\"" Notification-deployment.yaml
+    - yq -i eval "select(.kind==\"Deployment\").spec.template.spec.containers[0].image = \"$REGISTRY/gateway:$CI_COMMIT_TAG\"" Gateway-deployment.yaml
+    - git add .
+    - git commit -m "Updated to tag $CI_COMMIT_TAG"
+    - git push
+  rules:
+    - if: $CI_COMMIT_TAG

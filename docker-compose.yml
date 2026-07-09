@@ -1,0 +1,127 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - JWT_SECRET=exam-demo-jwt-secret-change-me
+      - LOGIN_PASSWORD=password
+      - USER_SERVICE_URL=http://user-service:3001
+    depends_on:
+      - user-service
+      - event-service
+      - booking-service
+
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_listener", "5672"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build: ./services/UserService
+    container_name: user-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - MONGODB_HOSTNAME=mongodb
+      - MONGODB_DBNAME=userdb
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  event-service:
+    build: ./services/EventService
+    container_name: event-service
+    ports:
+      - "3002:3002"
+      - "50051:50051"
+    environment:
+      - PORT=3002
+      - GRPC_PORT=50051
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - MONGODB_HOSTNAME=mongodb
+      - MONGODB_DBNAME=eventdb
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  booking-service:
+    build: ./services/BookingService
+    container_name: booking-service
+    ports:
+      - "3003:3003"
+      - "50052:50051"
+    environment:
+      - PORT=3003
+      - GRPC_PORT=50051
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - MONGODB_HOSTNAME=mongodb
+      - MONGODB_DBNAME=bookingdb
+      - EVENT_SERVICE_GRPC_URL=event-service:50051
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      event-service:
+        condition: service_started
+        
+  payment-service:
+    build: ./services/PaymentService
+    container_name: payment-service
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - MONGODB_HOSTNAME=mongodb
+      - MONGODB_DBNAME=paymentdb
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  notification-service:
+    build: ./services/NotificationService
+    container_name: notification-service
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - MONGODB_HOSTNAME=mongodb
+      - MONGODB_DBNAME=notificationdb
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  mongo-data:

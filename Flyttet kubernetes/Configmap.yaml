@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: event-booking
+data:
+  MONGODB_DBNAME: admin
+  MONGODB_HOSTNAME: mongodb
+  GRPC_PORT: "50051"
+  RABBITMQ_URL: amqp://rabbitmq:5672
+  REL_URL_PATH: /grp-1/tester
